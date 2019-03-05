@@ -2,6 +2,10 @@
 	-- add callback on selectionChanged: to untick or tick selection boxes
 	-- http://help.autodesk.com/view/3DSMAX/2017/ENU/?guid=__files_GUID_7C91D285_5683_4606_9F7C_B8D3A7CA508B_htm
 	
+	-- use .currentcell
+	
+	-- consider freezing select and name columns
+	
 	global DataGridViewTest
 	global DataGridViewTestOpen = false
 	try (destroydialog DataGridViewTest) catch()
@@ -81,7 +85,7 @@
 			dgv.RowHeadersBorderStyle =  (dotnetclass "DataGridViewHeaderBorderStyle").Single
 			dgv.ColumnHeadersBorderStyle =(dotnetclass  "DataGridViewHeaderBorderStyle").Single
 			
-			dgv.SelectionMode=(dotNetClass "System.Windows.Forms.DataGridViewSelectionMode").FullRowSelect
+			--dgv.SelectionMode=(dotNetClass "System.Windows.Forms.DataGridViewSelectionMode").FullRowSelect
 			
 			local allCams = for o in objects where superclassof o == camera collect o
 			
@@ -157,7 +161,7 @@
 			case val.ColumnIndex of
 			(					
 				4:(
-						local obj = GetAnimByHandle ((dgv.rows.item[val.RowIndex].cells.item[20].value) as integerPtr)
+						local obj = GetAnimByHandle ((dgv.rows.item[val.RowIndex].cells.item[24].value) as integerPtr)
 						Messagebox (obj.name)
 						--obj.name = (dgv.rows.item[val.RowIndex].cells.item[val.ColumnIndex].value)
 				)
@@ -176,7 +180,7 @@
 				(
 					0:( 
 						clearSelection()
-						local objToSelect = ( for i = 0 to (dgv.rows.count - 1) where ( (dgv.rows.item[i].cells.item[0].value)  == true ) collect (GetAnimByHandle ((dgv.rows.item[i].cells.item[20].value) as integerPtr)))
+						local objToSelect = ( for i = 0 to (dgv.rows.count - 1) where ( (dgv.rows.item[i].cells.item[0].value)  == true ) collect (GetAnimByHandle ((dgv.rows.item[i].cells.item[24].value) as integerPtr)))
 						select objToSelect
 					)
 					
@@ -185,7 +189,7 @@
 							--print val.RowIndex
 							--print val.ColumnIndex
 							--print (val as string)
-							local obj = GetAnimByHandle ((dgv.rows.item[val.RowIndex].cells.item[20].value) as integerPtr)
+							local obj = GetAnimByHandle ((dgv.rows.item[val.RowIndex].cells.item[24].value) as integerPtr)
 							obj.name = (dgv.rows.item[val.RowIndex].cells.item[val.ColumnIndex].value)
 							dgv.autoresizecolumns()
 						)
