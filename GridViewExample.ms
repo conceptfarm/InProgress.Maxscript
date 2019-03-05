@@ -10,20 +10,24 @@
 	local defList = #(
 		#("Select","check"), 
 		#("Camera Name","text"), 
-		#("First Frame","text"), 
-		#("Last Frame","text"), 
+		#("First Frame","number"), 
+		#("Last Frame","number"), 
 		#("Get Range","button"),  
+		#("  ","text"),  
 		#("Use Hide Layers","check"),
 		#("Clear All","button"), 
 		#("Add Hidden","button"),
+		#("  ","text"),  
 		#("Use Sunpoints","check"),
 		#("Show Sunpoints","check"), 
 		#("Get From Sun","button"),
 		#("Move Sun","button"),
+		#("  ","text"),  
 		#("Use Resolution","check"), 
-		#("Width","text"), 
-		#("Height","text"), 
+		#("Width","number"), 
+		#("Height","number"), 
 		#("Get Res.","button"),
+		#("  ","text"),  
 		#("Use HDRI","check"),  
 		#("HDRI Map","button"),
 		#("Link","check"),
@@ -45,12 +49,12 @@
   			dgv.RowHeadersVisible=false
 			dgv.AllowUserToResizeRows = false
 			
-			
 			for o in defList do
 			(
 				local col = undefined 
 				if o[2] == "text" then col = (dotnetobject "DataGridViewTextBoxColumn")
 				else if o[2] == "button" then col =  (dotnetobject "DataGridViewButtonColumn")
+				else if (o[2] == "number") then (col = (dotnetobject "DataGridViewTextBoxColumn"); col.valueType = (dotnetclass "type").gettype "System.Int32")
 				else col = (dotnetobject "DataGridViewCheckBoxColumn")
 				--local a = (dotnetobject "DataGridViewTriState.True")
 				--col.Resizable = (dotnetobject "DataGridViewTriState.True")
@@ -62,10 +66,20 @@
   			--for i=0 to dgv.Columns.count-1 do dgv.Columns.Item[i].width=145
   			numCells=dgv.Columns.count-1
 			
-  			oddColor=(dotnetclass "system.drawing.color").fromARGB 200 200 243
-			evenColor= (dotnetclass "system.drawing.color").fromARGB 255 255 255  			
+			--Colour and Styling
+  			oddColor=(dotnetclass "system.drawing.color").fromARGB 32 32 32
+			evenColor= (dotnetclass "system.drawing.color").fromARGB 68 68 68  			
 			dgv.defaultCellStyle.backColor=evenColor
-			dgv.AlternatingRowsDefaultCellStyle.backColor=oddColor		
+			dgv.AlternatingRowsDefaultCellStyle.backColor=oddColor	
+			dgv.BackgroundColor = (dotnetclass "system.drawing.color").fromARGB 68 68 68			
+			dgv.ForeColor = (dotnetclass "system.drawing.color").fromARGB 255 255 255
+			dgv.DefaultCellStyle.SelectionBackColor = (dotnetclass "system.drawing.color").fromARGB 80 200 69
+			dgv.ColumnHeadersDefaultCellStyle.backcolor = (dotnetclass "system.drawing.color").fromARGB 100 100 100
+			dgv.ColumnHeadersDefaultCellStyle.forecolor = (dotnetclass "system.drawing.color").fromARGB 255 255 255 
+			dgv.enableheadersvisualstyles = false
+			dgv.CellBorderStyle = (dotnetclass "DataGridViewCellBorderStyle").None
+			dgv.RowHeadersBorderStyle =  (dotnetclass "DataGridViewHeaderBorderStyle").Single
+			dgv.ColumnHeadersBorderStyle =(dotnetclass  "DataGridViewHeaderBorderStyle").Single
 			
 			dgv.SelectionMode=(dotNetClass "System.Windows.Forms.DataGridViewSelectionMode").FullRowSelect
 			
@@ -82,28 +96,49 @@
 				row.cells.item[2].value = 0
 				row.cells.item[3].value = 2
 				row.cells.item[4].value = "Get"
-				row.cells.item[5].value = false
-				row.cells.item[6].value = "Clear All"
-				row.cells.item[7].value = "Add Hidden"
-				row.cells.item[8].value = false
-				row.cells.item[9].value = false
-				row.cells.item[10].value = "Get from Sun"
-				row.cells.item[11].value = "Move Sun"
-				row.cells.item[12].value = false
-				row.cells.item[13].value = 1920
-				row.cells.item[14].value = 1080
-				row.cells.item[15].value = "Get Res."
-				row.cells.item[16].value = false
-				row.cells.item[17].value = "None"
-				row.cells.item[18].value = false
-				row.cells.item[19].value = "Edit"
- 				row.cells.item[20].value = (GetHandleByAnim o) as string
-				row.cells.item[20].ReadOnly = true
+				row.cells.item[4].flatstyle = (dotnetclass "FlatStyle").Flat
+				
+				row.cells.item[5].ReadOnly = true
+				
+				row.cells.item[6].value = false
+				row.cells.item[7].value = "Clear All"
+				row.cells.item[7].flatstyle = (dotnetclass "FlatStyle").Flat
+				row.cells.item[8].value = "Add Hidden"
+				row.cells.item[8].flatstyle = (dotnetclass "FlatStyle").Flat
+				
+				row.cells.item[9].ReadOnly = true
+				
+				row.cells.item[10].value = false
+				row.cells.item[11].value = false
+				row.cells.item[12].value = "Get from Sun"
+				row.cells.item[12].flatstyle = (dotnetclass "FlatStyle").Flat
+				row.cells.item[13].value = "Move Sun"
+				row.cells.item[13].flatstyle = (dotnetclass "FlatStyle").Flat
+				
+				row.cells.item[14].ReadOnly = true
+				
+				row.cells.item[15].value = false
+				row.cells.item[16].value = 1920
+				row.cells.item[17].value = 1080
+				row.cells.item[18].value = "Get Res."
+				row.cells.item[18].flatstyle = (dotnetclass "FlatStyle").Flat
+				
+				row.cells.item[19].ReadOnly = true
+				
+				row.cells.item[20].value = false
+				row.cells.item[21].value = "None"
+				row.cells.item[21].flatstyle = (dotnetclass "FlatStyle").Flat
+				row.cells.item[22].value = false
+				row.cells.item[23].value = "Edit"
+				row.cells.item[23].flatstyle = (dotnetclass "FlatStyle").Flat
+ 				row.cells.item[24].value = (GetHandleByAnim o) as string
+				row.cells.item[24].ReadOnly = true
 			)
 			
 			dgv.autoresizecolumns()
 			
 			dgv.AllowUserToAddRows = false
+			dgv.AllowUserToDeleteRows = false
 			--dgv.rows.removeat((objects.count))
 			dgv.ClearSelection()
 			DataGridViewTestOpen = true
@@ -200,6 +235,7 @@
 			)
 		)
 		
+		/*
 		Fn Clear_color=
 		(
 			for j=0 to 3 do			
@@ -244,6 +280,7 @@
 				)
 			)	
 		)
+		*/
   	 )
 	 
 	try(destroydialogDataGridViewTest )catch()
