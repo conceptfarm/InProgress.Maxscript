@@ -8,8 +8,23 @@
 	
 	global DataGridViewTest
 	global DataGridViewTestOpen = false
+	
+	local prevSelectedRows = #()
 	try (destroydialog DataGridViewTest) catch()
 	change_color=(dotnetclass "system.drawing.color").fromARGB 12 128 232
+	
+	fn getRowsFromSelection dgvObject = 
+	(
+		local result = #()
+		for i = 0 to dgvObject.SelectedCells.count-1 do
+		(
+			appendifUnique result dgvObject.SelectedCells.item[i].rowindex
+		)
+		return result
+	)
+	
+	--getRowsFromSelection dgv
+	
 	-- Name, Type, Width
 	local defList = #(
 		#("Select","check"), 
@@ -154,6 +169,12 @@
 			DataGridViewTestOpen =  false	
 		)
 		
+		
+		on dgv cellMouseDown val do
+		(
+			prevSelectedRows = getRowsFromSelection dgv
+		)
+		
 		on dgv CellMouseUp val do
 		(
 			dgv.commitEdit (dotNetClass "DataGridViewDataErrorContexts").commit
@@ -165,7 +186,6 @@
 						Messagebox (obj.name)
 						--obj.name = (dgv.rows.item[val.RowIndex].cells.item[val.ColumnIndex].value)
 				)
-					
 			)
 		)
 		
@@ -179,6 +199,12 @@
 				case val.ColumnIndex of
 				(
 					0:( 
+						--local selectedRows = getRowsFromSelection dgv
+						for o in prevSelectedRows do 
+						(
+							dgv.rows.item[o].cells.item[val.ColumnIndex].value = dgv.currentCell.value
+							
+						)
 						clearSelection()
 						local objToSelect = ( for i = 0 to (dgv.rows.count - 1) where ( (dgv.rows.item[i].cells.item[0].value)  == true ) collect (GetAnimByHandle ((dgv.rows.item[i].cells.item[24].value) as integerPtr)))
 						select objToSelect
