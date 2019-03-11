@@ -57,7 +57,7 @@
 	
 	rollout DataGridViewTest "DataGridView" width:1196 height:800
 	(  		 
-		button btn "refresh"
+		button btn "Refresh"
 		dotnetcontrol dgv "DataGridView"  align:#center width:1196 height:600 offset:[0,20]
 		
 		on btn pressed do
@@ -65,7 +65,7 @@
 			dgvRefreshing = true
 			for i = (dgv.rows.count-1) to 0 by -1 do dgv.Rows.Remove  dgv.rows.item[i]
 			
-			local allCams = for o in objects where superclassof o == camera collect o
+			local allCams = for o in objects where (superclassof o == camera and o.modifiers[#MultiCam_Attribute] != undefined) collect o
 			
 			for i = 0 to i = (allCams.count - 1) do 
   			(
@@ -119,9 +119,9 @@
 			)
 			
 			---dgv.autoresizecolumns()
-			dgv.height = (dgvRowHeight*(allCams.count)) + dgvHeaderRowHeight + (0.2* (allCams.count))
+			dgv.height = ceil ((dgvRowHeight*(allCams.count)) + dgvHeaderRowHeight + (0.2* (allCams.count)))
 			
-						if dgv.height > dgvMaxHeight then 
+			if dgv.height > dgvMaxHeight then 
 			(
 				dgv.height = dgvMaxHeight
 				dgv.width = 1212
@@ -138,8 +138,6 @@
 			--dgv.rows.removeat((objects.count))
 			dgv.ClearSelection()
 			dgvRefreshing = false
-			
-			
 		)
 		
 		
@@ -200,7 +198,7 @@
 			
 			--dgv.SelectionMode=(dotNetClass "System.Windows.Forms.DataGridViewSelectionMode").FullRowSelect
 			
-			local allCams = for o in objects where superclassof o == camera collect o
+			local allCams = for o in objects where (superclassof o == camera and o.modifiers[#MultiCam_Attribute] != undefined) collect o
 			
 			for i = 0 to i = (allCams.count - 1) do
   			(
@@ -211,8 +209,8 @@
 				
 				row.cells.item[0].value = false
 				row.cells.item[1].value = o.name
-				row.cells.item[2].value = 0
-				row.cells.item[3].value = 2
+				row.cells.item[2].value = o.modifiers[#MultiCam_Attribute].firstFrame_sp
+				row.cells.item[3].value = o.modifiers[#MultiCam_Attribute].lastFrame_sp
 				row.cells.item[4].value = "Get"
 				row.cells.item[4].flatstyle = (dotnetclass "FlatStyle").Flat
 				
@@ -254,7 +252,7 @@
 			)
 			
 			---dgv.autoresizecolumns()
-			dgv.height = (dgvRowHeight*(allCams.count)) + dgvHeaderRowHeight + (0.5 * (allCams.count))
+			dgv.height = ceil ((dgvRowHeight*(allCams.count)) + dgvHeaderRowHeight + (0.2* (allCams.count)))
 			
 			if dgv.height > dgvMaxHeight then 
 			(
@@ -285,11 +283,11 @@
 		on dgv cellMouseDown val do
 		(
 			prevSelectedRows = getRowsFromSelection dgv
+			if prevSelectedRows.count == 0 or prevSelectedRows.count == 1 then prevSelectedRows = #(val.rowIndex)
 		)
 		
 		on dgv CellMouseUp val do
 		(
-			
 			dgv.commitEdit (dotNetClass "DataGridViewDataErrorContexts").commit
 			
 			if val.RowIndex >= 0 then
@@ -297,10 +295,14 @@
 				case val.ColumnIndex of
 				(					
 					4:(
-							local obj = GetAnimByHandle ((dgv.rows.item[val.RowIndex].cells.item[24].value) as integerPtr)
-							Messagebox (obj.name)
-							--obj.name = (dgv.rows.item[val.RowIndex].cells.item[val.ColumnIndex].value)
-					)
+							for row in prevSelectedRows do 
+							(
+								local obj = GetAnimByHandle ((dgv.rows.item[row].cells.item[24].value) as integerPtr)
+								setProperty obj.modifiers[#MultiCam_Attribute] #getFrameRange_btn true
+								dgv.rows.item[row].cells.item[2].value = obj.modifiers[#MultiCam_Attribute].firstFrame_sp
+								dgv.rows.item[row].cells.item[3].value = obj.modifiers[#MultiCam_Attribute].lastFrame_sp
+							)
+						)
 				)
 			)
 		)
@@ -316,29 +318,25 @@
 				(
 					0:( 
 						--local selectedRows = getRowsFromSelection dgv
-						for o in prevSelectedRows do 
+						for row in prevSelectedRows do 
 						(
-							dgv.rows.item[o].cells.item[val.ColumnIndex].value = dgv.currentCell.value
-							
+							dgv.rows.item[row].cells.item[val.ColumnIndex].value = dgv.currentCell.value
 						)
+						
 						clearSelection()
 						local objToSelect = ( for i = 0 to (dgv.rows.count - 1) where ( (dgv.rows.item[i].cells.item[0].value)  == true ) collect (GetAnimByHandle ((dgv.rows.item[i].cells.item[24].value) as integerPtr)))
 						select objToSelect
 					)
 					
 					1:(
-							--print "something"
-							--print val.RowIndex
-							--print val.ColumnIndex
-							--print (val as string)
 							local obj = GetAnimByHandle ((dgv.rows.item[val.RowIndex].cells.item[24].value) as integerPtr)
 							obj.name = (dgv.rows.item[val.RowIndex].cells.item[val.ColumnIndex].value)
-							--dgv.autoresizecolumns()
 						)
 						
 					2:(
 						local thisValue = (dgv.rows.item[val.RowIndex].cells.item[val.ColumnIndex].value) as integer
 						local nextValue = (dgv.rows.item[val.RowIndex].cells.item[val.ColumnIndex + 1].value) as integer
+						local obj = GetAnimByHandle ((dgv.rows.item[val.RowIndex].cells.item[24].value) as integerPtr)
 						
 						if thisValue !=undefined and nextValue != undefined then
 						(	
@@ -346,19 +344,26 @@
 							(
 								Messagebox ("First frame number can't be grater than last frame number.")
 								(dgv.rows.item[val.RowIndex].cells.item[val.ColumnIndex].value) = nextValue
+								obj.modifiers[#MultiCam_Attribute].firstFrame_sp = dgv.rows.item[val.RowIndex].cells.item[val.ColumnIndex].value as integer
 							)
-							else dgv.currentCell.value = dgv.currentCell.value as integer
+							else
+							(
+								dgv.rows.item[val.RowIndex].cells.item[val.ColumnIndex].value = dgv.rows.item[val.RowIndex].cells.item[val.ColumnIndex].value as integer
+								obj.modifiers[#MultiCam_Attribute].firstFrame_sp = dgv.rows.item[val.RowIndex].cells.item[val.ColumnIndex].value as integer
+							)
 						)
 						else
 						(
 							Messagebox ("Frame number must be an number.")
 							(dgv.rows.item[val.RowIndex].cells.item[val.ColumnIndex].value) = 0
+							obj.modifiers[#MultiCam_Attribute].firstFrame_sp = dgv.rows.item[val.RowIndex].cells.item[val.ColumnIndex].value as integer
 						)
 					)
 					
 					3:(
 						local thisValue = (dgv.rows.item[val.RowIndex].cells.item[val.ColumnIndex].value) as integer
 						local prevValue = (dgv.rows.item[val.RowIndex].cells.item[val.ColumnIndex - 1].value) as integer
+						local obj = GetAnimByHandle ((dgv.rows.item[val.RowIndex].cells.item[24].value) as integerPtr)
 						
 						if thisValue !=undefined and prevValue != undefined then
 						(	
@@ -366,13 +371,19 @@
 							(
 								Messagebox ("Last frame number can't be smaller than first frame number.")
 								(dgv.rows.item[val.RowIndex].cells.item[val.ColumnIndex].value) = prevValue
+								obj.modifiers[#MultiCam_Attribute].lastFrame_sp = dgv.rows.item[val.RowIndex].cells.item[val.ColumnIndex].value as integer
 							)
-							else dgv.currentCell.value = dgv.currentCell.value as integer
+							else
+							(
+								dgv.rows.item[val.RowIndex].cells.item[val.ColumnIndex].value = dgv.rows.item[val.RowIndex].cells.item[val.ColumnIndex].value as integer
+								obj.modifiers[#MultiCam_Attribute].lastFrame_sp = dgv.rows.item[val.RowIndex].cells.item[val.ColumnIndex].value as integer
+							)
 						)
 						else
 						(
 							Messagebox ("Frame number must be an number.")
 							(dgv.rows.item[val.RowIndex].cells.item[val.ColumnIndex].value) = 0
+							obj.modifiers[#MultiCam_Attribute].lastFrame_sp = dgv.rows.item[val.RowIndex].cells.item[val.ColumnIndex].value as integer
 						)
 					)
 					
