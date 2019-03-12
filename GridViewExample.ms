@@ -55,6 +55,26 @@
 		result
 	)
 	
+	fn checkSelectedCells dgvObject val = 
+	(
+		for row in prevSelectedRows do 
+		(
+			dgvObject.rows.item[row].cells.item[val.ColumnIndex].value = dgvObject.currentCell.value
+		)
+	)
+	
+	fn getObjectByRow dgvObject row = 
+	(
+		local obj = GetAnimByHandle ((dgvObject.rows.item[row].cells.item[24].value) as integerPtr)
+		return obj		
+	)
+	
+	fn getObjectsFromChecked dgvObject col = 
+	(
+		local objToSelect = (for i = 0 to (dgvObject.rows.count - 1) where ( (dgvObject.rows.item[i].cells.item[col].value)  == true ) collect (GetAnimByHandle ((dgvObject.rows.item[i].cells.item[24].value) as integerPtr)))
+		return objToSelect
+	)
+	
 	rollout DataGridViewTest "DataGridView" width:1196 height:800
 	(  		 
 		button btn "Refresh"
@@ -297,7 +317,7 @@
 					4:(
 							for row in prevSelectedRows do 
 							(
-								local obj = GetAnimByHandle ((dgv.rows.item[row].cells.item[24].value) as integerPtr)
+								local obj = getObjectByRow dgv row
 								setProperty obj.modifiers[#MultiCam_Attribute] #getFrameRange_btn true
 								dgv.rows.item[row].cells.item[2].value = obj.modifiers[#MultiCam_Attribute].firstFrame_sp
 								dgv.rows.item[row].cells.item[3].value = obj.modifiers[#MultiCam_Attribute].lastFrame_sp
@@ -316,27 +336,22 @@
 			(
 				case val.ColumnIndex of
 				(
-					0:( 
-						--local selectedRows = getRowsFromSelection dgv
-						for row in prevSelectedRows do 
-						(
-							dgv.rows.item[row].cells.item[val.ColumnIndex].value = dgv.currentCell.value
-						)
-						
+					0:( --Selection
+						checkSelectedCells dgv val
 						clearSelection()
-						local objToSelect = ( for i = 0 to (dgv.rows.count - 1) where ( (dgv.rows.item[i].cells.item[0].value)  == true ) collect (GetAnimByHandle ((dgv.rows.item[i].cells.item[24].value) as integerPtr)))
+						local objToSelect = getObjectsFromChecked dgv 0	
 						select objToSelect
 					)
 					
-					1:(
-							local obj = GetAnimByHandle ((dgv.rows.item[val.RowIndex].cells.item[24].value) as integerPtr)
-							obj.name = (dgv.rows.item[val.RowIndex].cells.item[val.ColumnIndex].value)
-						)
+					1:(--Camera Name
+						local obj = getObjectByRow dgv val.RowIndex
+						obj.name = (dgv.rows.item[val.RowIndex].cells.item[val.ColumnIndex].value)
+					)
 						
-					2:(
+					2:(--First Frame
 						local thisValue = (dgv.rows.item[val.RowIndex].cells.item[val.ColumnIndex].value) as integer
 						local nextValue = (dgv.rows.item[val.RowIndex].cells.item[val.ColumnIndex + 1].value) as integer
-						local obj = GetAnimByHandle ((dgv.rows.item[val.RowIndex].cells.item[24].value) as integerPtr)
+						local obj = getObjectByRow dgv val.RowIndex
 						
 						if thisValue !=undefined and nextValue != undefined then
 						(	
@@ -360,10 +375,10 @@
 						)
 					)
 					
-					3:(
+					3:(--Last Frame
 						local thisValue = (dgv.rows.item[val.RowIndex].cells.item[val.ColumnIndex].value) as integer
 						local prevValue = (dgv.rows.item[val.RowIndex].cells.item[val.ColumnIndex - 1].value) as integer
-						local obj = GetAnimByHandle ((dgv.rows.item[val.RowIndex].cells.item[24].value) as integerPtr)
+						local obj = getObjectByRow dgv val.RowIndex
 						
 						if thisValue !=undefined and prevValue != undefined then
 						(	
@@ -386,6 +401,45 @@
 							obj.modifiers[#MultiCam_Attribute].lastFrame_sp = dgv.rows.item[val.RowIndex].cells.item[val.ColumnIndex].value as integer
 						)
 					)
+					
+					6:(--Use Layers
+						checkSelectedCells dgv val
+						local thisValue = (dgv.rows.item[val.RowIndex].cells.item[val.ColumnIndex].value)
+						local obj = getObjectByRow dgv val.RowIndex
+						setProperty obj.modifiers[#MultiCam_Attribute] #useHideLayers_chb thisValue
+					)
+						
+					10:(--Use Sunpoints
+							checkSelectedCells dgv val
+						
+					)
+					
+					11:(--Show Sunpoints
+						checkSelectedCells dgv val
+					
+					
+					)
+						
+						
+					15:(--Use Resolution
+						checkSelectedCells dgv val
+					
+					
+					)
+						
+					20:(--Use HDRI
+						checkSelectedCells dgv val
+					
+					
+					)
+						
+					22:(--Link HDRI
+						checkSelectedCells dgv val
+					
+					
+					)
+						
+						
 					
 
 					
