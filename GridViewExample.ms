@@ -42,6 +42,7 @@
 		#("HDRI Map","button",56),
 		#("Link HDRI","check",56),
 		#("Edit Map","button",56),
+		#("ID","text",42),
 		#("ID","text",42))
 		
 	
@@ -55,11 +56,26 @@
 		result
 	)
 	
-	fn checkSelectedCells dgvObject val = 
+	fn checkSelectedCells dgvObject val dependsOnCol:unsupplied  = 
 	(
 		for row in prevSelectedRows do 
 		(
-			dgvObject.rows.item[row].cells.item[val.ColumnIndex].value = dgvObject.currentCell.value
+			if not dependsOnCol == undefined then 
+			(
+				dgvObject.rows.item[row].cells.item[val.ColumnIndex].value = dgvObject.currentCell.value
+			)
+			else
+			(
+				if dgvObject.rows.item[row].cells.item[dependsOnCol].value as integerPtr != undefined then
+				(
+					dgvObject.rows.item[row].cells.item[val.ColumnIndex].value = dgvObject.currentCell.value
+				)
+				else 
+				(
+
+					dgvObject.rows.item[row].cells.item[val.ColumnIndex].value = false
+				)
+			)
 		)
 	)
 	
@@ -96,8 +112,8 @@
 				
 				row.cells.item[0].value = false
 				row.cells.item[1].value = o.name
-				row.cells.item[2].value = 0
-				row.cells.item[3].value = 2
+				row.cells.item[2].value = o.modifiers[#MultiCam_Attribute].firstFrame_sp
+				row.cells.item[3].value = o.modifiers[#MultiCam_Attribute].lastFrame_sp
 				row.cells.item[4].value = "Get"
 				row.cells.item[4].flatstyle = (dotnetclass "FlatStyle").Flat
 				
@@ -129,13 +145,15 @@
 				row.cells.item[19].ReadOnly = true
 				
 				row.cells.item[20].value = false
-				row.cells.item[21].value = "None"
+				row.cells.item[21].value = if (o.modifiers[#MultiCam_Attribute].hdriMap_btn != undefined) then (o.modifiers[#MultiCam_Attribute].hdriMap_btn.name) else ("None")
 				row.cells.item[21].flatstyle = (dotnetclass "FlatStyle").Flat
 				row.cells.item[22].value = false
 				row.cells.item[23].value = "Edit"
 				row.cells.item[23].flatstyle = (dotnetclass "FlatStyle").Flat
  				row.cells.item[24].value = (GetHandleByAnim o) as string
 				row.cells.item[24].ReadOnly = true
+				row.cells.item[25].value = if (o.modifiers[#MultiCam_Attribute].hdriMap_btn != undefined) then ((GetHandleByAnim o.modifiers[#MultiCam_Attribute].hdriMap_btn) as string) else ("None")
+				row.cells.item[25].ReadOnly = true
 			)
 			
 			---dgv.autoresizecolumns()
@@ -262,13 +280,15 @@
 				row.cells.item[19].ReadOnly = true
 				
 				row.cells.item[20].value = false
-				row.cells.item[21].value = "None"
+				row.cells.item[21].value = if (o.modifiers[#MultiCam_Attribute].hdriMap_btn != undefined) then (o.modifiers[#MultiCam_Attribute].hdriMap_btn.name) else ("None")
 				row.cells.item[21].flatstyle = (dotnetclass "FlatStyle").Flat
 				row.cells.item[22].value = false
 				row.cells.item[23].value = "Edit"
 				row.cells.item[23].flatstyle = (dotnetclass "FlatStyle").Flat
  				row.cells.item[24].value = (GetHandleByAnim o) as string
 				row.cells.item[24].ReadOnly = true
+				row.cells.item[25].value = if (o.modifiers[#MultiCam_Attribute].hdriMap_btn != undefined) then ((GetHandleByAnim o.modifiers[#MultiCam_Attribute].hdriMap_btn) as string) else ("None")
+				row.cells.item[25].ReadOnly = true
 			)
 			
 			---dgv.autoresizecolumns()
@@ -315,14 +335,14 @@
 				case val.ColumnIndex of
 				(					
 					4:(
-							for row in prevSelectedRows do 
-							(
-								local obj = getObjectByRow dgv row
-								setProperty obj.modifiers[#MultiCam_Attribute] #getFrameRange_btn true
-								dgv.rows.item[row].cells.item[2].value = obj.modifiers[#MultiCam_Attribute].firstFrame_sp
-								dgv.rows.item[row].cells.item[3].value = obj.modifiers[#MultiCam_Attribute].lastFrame_sp
-							)
+						for row in prevSelectedRows do 
+						(
+							local obj = getObjectByRow dgv row
+							setProperty obj.modifiers[#MultiCam_Attribute] #getFrameRange_btn true
+							dgv.rows.item[row].cells.item[2].value = obj.modifiers[#MultiCam_Attribute].firstFrame_sp
+							dgv.rows.item[row].cells.item[3].value = obj.modifiers[#MultiCam_Attribute].lastFrame_sp
 						)
+					)
 				)
 			)
 		)
@@ -410,33 +430,40 @@
 					)
 						
 					10:(--Use Sunpoints
-							checkSelectedCells dgv val
-						
+						checkSelectedCells dgv val
+						local thisValue = (dgv.rows.item[val.RowIndex].cells.item[val.ColumnIndex].value)
+						local obj = getObjectByRow dgv val.RowIndex
+						setProperty obj.modifiers[#MultiCam_Attribute] #useSunpoints_chb thisValue
 					)
 					
 					11:(--Show Sunpoints
 						checkSelectedCells dgv val
-					
-					
+						local thisValue = (dgv.rows.item[val.RowIndex].cells.item[val.ColumnIndex].value)
+						local obj = getObjectByRow dgv val.RowIndex
+						setProperty obj.modifiers[#MultiCam_Attribute] #showSunPoint_btn thisValue
 					)
-						
 						
 					15:(--Use Resolution
 						checkSelectedCells dgv val
-					
-					
+						local thisValue = (dgv.rows.item[val.RowIndex].cells.item[val.ColumnIndex].value)
+						local obj = getObjectByRow dgv val.RowIndex
+						setProperty obj.modifiers[#MultiCam_Attribute] #useHeightWidth_chb thisValue
 					)
 						
 					20:(--Use HDRI
 						checkSelectedCells dgv val
-					
-					
+						local thisValue = (dgv.rows.item[val.RowIndex].cells.item[val.ColumnIndex].value)
+						local obj = getObjectByRow dgv val.RowIndex
+						setProperty obj.modifiers[#MultiCam_Attribute] #useHDRIMap_chb thisValue
 					)
 						
 					22:(--Link HDRI
-						checkSelectedCells dgv val
-					
-					
+						checkSelectedCells dgv val dependsOnCol:25
+						local thisValue = (dgv.rows.item[val.RowIndex].cells.item[val.ColumnIndex].value)
+						local obj = getObjectByRow dgv val.RowIndex
+						setProperty obj.modifiers[#MultiCam_Attribute] #hdriMapLink_chb thisValue
+						dgv.rows.item[val.RowIndex].cells.item[val.ColumnIndex].value =  obj.modifiers[#MultiCam_Attribute].hdriMapLink_chb
+
 					)
 						
 						
@@ -452,3 +479,5 @@
 	try(destroydialogDataGridViewTest )catch()
 	createDialog DataGridViewTest
 )
+
+-- dgv = DataGridViewTest.dgv
