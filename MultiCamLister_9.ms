@@ -30,6 +30,7 @@ Icon:#("Lights",7)
 	local dgvHeaderRowHeight = 36
 	local dgvMaxHeight = 600
 	local dgvRefreshing = false
+	local updateDGV = false
 	local disabledColor = (dotnetclass "system.drawing.color").fromARGB 128 128 128
 	local enabledColor = (dotnetclass "system.drawing.color").fromARGB 255 255 255
 	local enabledStyle = dotnetobject "DataGridViewCellStyle"
@@ -68,6 +69,13 @@ Icon:#("Lights",7)
 		#("IDMat","text",42))
 		
 	
+	local defListNoMod = #(
+		#("Select","button",41), 
+		#("Camera Name","text",101),
+		#("Add MultiCam Attribute Modifier","button",140),
+		#("ID","text",42),
+		#("IDMat","text",42))
+
 	fn getVraySunInScene = 
 	(
 		local result = undefined
@@ -167,6 +175,40 @@ Icon:#("Lights",7)
 		)
 	)
 	
+		
+	fn populateColumns dgvObject defList = 
+	(
+		for o in defList do
+		(
+			local col = undefined 
+			case o[2] of 
+			(
+				"text":(
+								col = (dotnetobject "DataGridViewTextBoxColumn")
+							)
+				"button": (
+								col =  (dotnetobject "DataGridViewButtonColumn")
+								col.sortmode = (dotnetclass "DataGridViewColumnSortMode").NotSortable
+							)
+				"number": (
+								col = (dotnetobject "DataGridViewTextBoxColumn")
+								--Not a good idea to set column to integer mode, harder to handle non-number entries
+								--col.valueType = (dotnetclass "type").gettype "System.Int32"
+							)
+				"check":(
+								col = (dotnetobject "DataGridViewCheckBoxColumn")
+							)
+			)
+			col.DataPropertyName = "Name"
+			col.Name = o[1]
+			col.width = o[3]
+			if o[1] == "ID" then col.visible = false
+			if o[1] == "IDMat" then col.visible = false
+			dgvObject.Columns.Add (col)
+		)
+	)
+
+
 	fn populateRow dgvObject rowIndex obj =
 	(
 		dgvObject.rows.item[rowIndex].cells.item[0].value = ""
@@ -325,7 +367,7 @@ Icon:#("Lights",7)
 					append rowsToSelect (findItem cameraObjIDs objID)
 				)
 			)
-			print (rowsToSelect as string)
+			--print (rowsToSelect as string)
 			dgv.ClearSelection()
 			for i=1 to rowsToSelect.count do (dgv.rows.item[rowsToSelect[i]-1].cells.item[0].selected = true)
 		)
@@ -366,6 +408,53 @@ Icon:#("Lights",7)
 			)
 		)
 	)
+	
+	global preDeleteFN, modiferFN, postDeleteFN
+	fn preDeleteFN = 
+	(
+		local obj = callbacks.notificationParam()
+		local dgv = MultiCamLister.dgv
+		if dgv.Focused == false then
+		(
+			if superclassof obj == camera then
+			(
+				updateDGV = true
+			)
+		)
+	)
+
+	fn postDeleteFN =
+	(
+		local dgv = MultiCamLister.dgv
+		if updateDGV == true then
+		(
+			dgvRefreshing = true
+			dgv.Rows.Clear()
+			populateDGV dgv
+			dgvRefreshing = false
+			updateDGV = false
+		)
+	)
+
+	fn modiferFN = 
+	(
+		local obj = (callbacks.notificationParam())[1]
+		local objMod = (callbacks.notificationParam())[2]
+		local dgv = MultiCamLister.dgv
+		if dgv.Focused == false then
+		(
+			if superclassof obj == camera and classof objMod == MultiCamAttribute then
+			(
+				dgvRefreshing = true
+				dgv.Rows.Clear()
+				
+				populateDGV dgv
+				
+				dgvRefreshing = false
+			)
+		)
+	)
+
 
 
 	--------------------------------------
@@ -376,11 +465,14 @@ Icon:#("Lights",7)
 	(  		 
 		button Refresh_btn "Refresh"
 		dotnetcontrol dgv "DataGridView"  align:#center width:1196 height:600 offset:[0,20]
-		
+		dotnetcontrol dgvNoMod "DataGridView"  align:#center width:1196 height:600 offset:[0,20]
+
 		on Refresh_btn pressed do
 		(
 			dgvRefreshing = true
+			
 			dgv.Rows.Clear()
+			dgvNoMod.Rows.Clear()
 			
 			populateDGV dgv
 			
@@ -391,9 +483,11 @@ Icon:#("Lights",7)
 		on MultiCamLister open do
 		(
 			 
-  			dgv.Dock=dgv.Dock.Fill
-  			dgv.RowHeadersVisible=false
+  			dgv.Dock = dgv.Dock.Fill
+  			dgv.RowHeadersVisible = false
 			
+  			populateColumns dgv defList
+			/*
 			for o in defList do
 			(
 				local col = undefined 
@@ -422,12 +516,18 @@ Icon:#("Lights",7)
 				if o[1] == "IDMat" then col.visible = false
 				dgv.Columns.Add (col)
 			)
+			*/
+			dgvNoMod.Dock = dgvNoMod.Dock.Fill
+  			dgvNoMod.RowHeadersVisible = false
+
+			populateColumns dgvNoMod defListNoMod
+
 		
 			--Colour and Styling
   			oddColor=(dotnetclass "system.drawing.color").fromARGB 32 32 32
 			evenColor= (dotnetclass "system.drawing.color").fromARGB 68 68 68  			
-			dgv.defaultCellStyle.backColor=evenColor
-			dgv.AlternatingRowsDefaultCellStyle.backColor=oddColor	
+			dgv.defaultCellStyle.backColor = evenColor
+			dgv.AlternatingRowsDefaultCellStyle.backColor = oddColor	
 			dgv.BackgroundColor = (dotnetclass "system.drawing.color").fromARGB 68 68 68			
 			dgv.ForeColor = (dotnetclass "system.drawing.color").fromARGB 255 255 255
 			dgv.DefaultCellStyle.SelectionBackColor = (dotnetclass "system.drawing.color").fromARGB 80 200 69
@@ -451,7 +551,12 @@ Icon:#("Lights",7)
 			callBacks.AddScript #systemPreReset "destroydialog MultiCamLister" id:#MultiCamListerDialog
 			callBacks.AddScript #systemPreNew "destroydialog MultiCamLister" id:#MultiCamListerDialog
 			callBacks.AddScript #filePreOpen "destroydialog MultiCamLister" id:#MultiCamListerDialog
-			listerNodeEventCallback = NodeEventCallback mouseUp:true delay:2000 selectionChanged:selectionFN added:addedFN deleted:addedFN nameChanged:otherPropFN geometryChanged:otherPropFN
+			callBacks.AddScript #nodePreDelete "preDeleteFN()" id:#MultiCamListerDialog
+			callBacks.AddScript #nodepostDelete "postDeleteFN()" id:#MultiCamListerDialog
+
+			callBacks.AddScript #postModifierAdded "modiferFN()" id:#MultiCamListerDialog
+
+			listerNodeEventCallback = NodeEventCallback mouseUp:true delay:2000 selectionChanged:selectionFN added:addedFN nameChanged:otherPropFN geometryChanged:otherPropFN
 			
 			MultiCamListerOpen = true
 		)
