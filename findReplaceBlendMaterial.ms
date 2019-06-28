@@ -1,5 +1,19 @@
 (
 
+	--list all classes for material	
+	--apropos "material:MaxClass"
+-- get material
+-- get m.nusubs
+-- for each numsubs do
+-- superclassof ns 
+-- if superclassof ns is maxobject then  if superclassof ns.value is material
+	-- recurse with material
+-- else if superclassof ns is material
+	-- recurse with material
+-- 
+
+
+
 	fn findNM mat = 
 	(
 		--print (classof mat)
